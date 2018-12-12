@@ -1,0 +1,6 @@
+framework module SSD_MODULE {
+    umbrella header "SSD_MODULE.h"
+
+    export *
+    module * { export * }
+}
