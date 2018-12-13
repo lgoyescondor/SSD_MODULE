@@ -1,84 +1,33 @@
 buildscript {
-    ext.kotlin_version = '1.2.60'
-    ext.konan_version = '0.8.2'
+    ext.kotlin_version = '1.3.11'
+    ext.kotlin_native_version = '1.3.0-rc-146'
 
     repositories {
-        mavenCentral()
-        maven {
-            url  "https://dl.bintray.com/jetbrains/kotlin-native-dependencies"
-        }
+        maven { url 'https://dl.bintray.com/jetbrains/kotlin-native-dependencies' }
+        jcenter()
     }
 
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.jetbrains.kotlin:kotlin-native-gradle-plugin:$konan_version"
+        classpath "org.jetbrains.kotlin:kotlin-native-gradle-plugin:$kotlin_native_version"
     }
 }
 
-version = '1.0'
+apply plugin: 'kotlin-platform-native'
 
-apply plugin:'java-library'
-apply plugin:'kotlin'
-apply plugin:'konan'
+sourceSets {
 
+    main {
+        kotlin.srcDirs 'src/main/kotlin/com/common'
 
-repositories {
-    jcenter()
-}
-
-apply plugin: 'maven-publish'
-
-task sourceJar(type: Jar) {
-    from sourceSets.main.allJava
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            groupId = "com.common.ssd"
-            artifactId = "ssd-native-test"
-
-            from components.java
-
-            artifact sourceJar {
-                classifier "sources"
-            }
+        component {
+            outputKinds = [FRAMEWORK]
+            target 'ios_arm64', 'ios_x64'
+            extraOpts("-module_name", "SSD_MODULE")
         }
     }
-}
 
-dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-}
-
-konan.targets = ['ios_arm32', 'ios_arm64', 'ios_x64']
-
-def frameworkName = 'KotlinNativeTestLibrary'
-
-konanArtifacts {
-    framework(frameworkName)
-}
-
-
-task lipo(type: Exec) {
-    def frameworks = files(
-            "$buildDir/konan/bin/ios_arm32/${frameworkName}.framework/$frameworkName",
-            "$buildDir/konan/bin/ios_arm64/${frameworkName}.framework/$frameworkName",
-            "$buildDir/konan/bin/ios_x64/${frameworkName}.framework/$frameworkName"
-    )
-    def output = file("$buildDir/konan/bin/iphone_universal/${frameworkName}.framework/$frameworkName")
-    inputs.files frameworks
-    outputs.file output
-    executable = 'lipo'
-    args = frameworks.files
-    args += ['-create', '-output', output]
-}
-task copyFramework(type: Copy, dependsOn: lipo) {
-    from("$buildDir/konan/bin/ios_arm64") {
-        include '*/Headers/*'
-        include '*/Modules/*'
-        include '*/Info.plist'
+    test.component {
+        target 'ios_arm64', 'ios_x64'
     }
-    from "$buildDir/konan/bin/iphone_universal"
-    into "$buildDir/konan/bin/iphone_universal_framework/"
 }
