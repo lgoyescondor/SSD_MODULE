@@ -1,5 +1,4 @@
 buildscript {
-    ext.kotlin_version = '1.3.11'
     ext.kotlin_native_version = '1.3.0-rc-146'
 
     repositories {
@@ -8,26 +7,14 @@ buildscript {
     }
 
     dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-native-gradle-plugin:$kotlin_native_version"
     }
 }
 
-apply plugin: 'kotlin-platform-native'
+apply plugin: 'konan'
 
-sourceSets {
+konan.targets = ["iphone", "iphone_sim"]
 
-    main {
-        kotlin.srcDirs 'src/main/kotlin/com/common'
-
-        component {
-            outputKinds = [FRAMEWORK]
-            target 'ios_arm64', 'ios_x64'
-            extraOpts("-module_name", "SSD_MODULE")
-        }
-    }
-
-    test.component {
-        target 'ios_arm64', 'ios_x64'
-    }
+konanArtifacts {
+    framework('SSD_MODULE')
 }
